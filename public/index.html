@@ -48,7 +48,8 @@ input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
 .mk i{width:14px;height:14px;border-radius:50%;margin-left:-8px;flex:none}.mk em{font:normal 12px var(--mono);margin-left:10px;white-space:nowrap}
 .mk u{position:absolute;right:100%;margin-right:14px;font:12px var(--mono);color:var(--mute);text-decoration:none;white-space:nowrap}
 .fall{position:absolute;left:-1px;width:3px;background:linear-gradient(var(--gold),var(--dn));transition:height .8s,top .8s}
-.mbar{height:8px;background:var(--inp);border-radius:4px;overflow:hidden;margin-top:12px}.mbar div{height:100%;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .6s,background .4s}
+.mbar{height:8px;background:var(--inp);border-radius:4px;overflow:hidden;margin-top:12px}.ml{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);margin-top:14px}.ml b{color:var(--ink);font:500 12px var(--mono)}.meter .mbar{margin-top:5px}
+.mbar div{height:100%;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .6s,background .4s}
 section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
 
 .tgl{background:transparent;border:1px solid var(--line);color:var(--ink);padding:5px 14px;border-radius:999px;font:12px var(--mono);cursor:pointer}
@@ -91,16 +92,19 @@ section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
    <text id="rPct" x="200" y="168" text-anchor="middle" font-size="15" font-family="IBM Plex Mono" style="fill:var(--ink)">0%</text>
   </svg><div class="status" id="rStat">–</div></div>
 
- <div class="card"><h2>Risk model</h2><p class="cap">Set a position and an adverse move to see what it costs. Priced off live XAUUSD spot.</p>
+ <div class="card"><h2>Risk model</h2><p class="cap">Size the trade in lots or in dollars and the other updates itself. While you size by lots, the dollar size follows the live XAUUSD spot price. Effective leverage is position size divided by your balance.</p>
   <div class="row">
-   <label>Position size (USD)<input id="kN" type="number" value="40000" min="0"></label>
+   <label>Lots<input id="kLot" type="number" value="1" min="0" step="0.01"></label>
+   <label>Position size (USD)<input id="kN" type="number" value="400000" min="0"></label>
    <label>Leverage 1:<input id="kL" type="number" value="400" min="1"></label>
+   <label>Contract size (oz per lot)<input id="kC" type="number" value="100" min="1"></label>
    <label>Adverse move (USD per oz)<input id="kM" type="number" value="20" min="0" step="0.5"></label>
-   <label>Account balance (USD)<input id="kB" type="number" value="1000" min="0"></label>
+   <label>Account balance (USD)<input id="kB" type="number" value="40000" min="0"></label>
    <label>Direction<select id="kD"><option value="1">Long, price falls</option><option value="-1">Short, price rises</option></select></label>
    <label>Stop-out level (%)<input id="kS" type="number" value="50" min="0"></label>
   </div>
-  <div class="mbar" aria-hidden="true"><div id="kBar"></div></div>
+  <div class="meter"><div class="ml"><span>Effective leverage</span><b id="kEffT">–</b></div><div class="mbar" aria-hidden="true"><div id="kEff"></div></div></div>
+  <div class="meter"><div class="ml"><span>Loss on this move</span><b id="kLossT">–</b></div><div class="mbar" aria-hidden="true"><div id="kBar"></div></div></div>
   <div class="stats" id="kStats"></div></div>
 </section>
 
@@ -186,16 +190,23 @@ function calc(){
 }
 
 /* ---------- risk model ---------- */
-const ks=["kN","kL","kM","kB","kD","kS"];ks.forEach(i=>$(i).addEventListener("input",risk));
+let kMode="lots";
+$("kLot").addEventListener("input",()=>kMode="lots");$("kN").addEventListener("input",()=>kMode="usd");
+const ks=["kLot","kN","kL","kC","kM","kB","kD","kS"];ks.forEach(i=>$(i).addEventListener("input",()=>risk()));
 let R=null,t0=performance.now();
 let rk="";
 function risk(force){
-  const N=+$("kN").value,L=+$("kL").value||1,M=+$("kM").value,B=+$("kB").value,D=+$("kD").value,S=+$("kS").value;
+  const C=+$("kC").value||100,L=+$("kL").value||1,M=+$("kM").value,B=+$("kB").value,D=+$("kD").value,S=+$("kS").value;
   const px=Q.spot?Q.spot.price:(R?R.px:4000); /* spot only */
-  const key=[N,L,M,B,D,S,px].join();if(key===rk&&!force)return;rk=key;
+  let N,lots;
+  if(kMode==="lots"){lots=+$("kLot").value||0;N=lots*C*px}else{N=+$("kN").value||0;lots=N/(C*px)}
+  const key=[kMode,kMode==="lots"?lots:N,C,L,M,B,D,S,px].join();if(key===rk&&!force)return;rk=key;
+  if(kMode==="lots"&&document.activeElement!==$("kN"))$("kN").value=Math.round(N);
+  if(kMode==="usd"&&document.activeElement!==$("kLot"))$("kLot").value=+lots.toFixed(3);
   const oz=N/px,margin=N/L,loss=oz*M,eq=B-loss,ml=margin?eq/margin*100:0;
   const liqM=oz?(B-S/100*margin)/oz:0,wipeM=oz?B/oz:0,lossPct=B?loss/B*100:0,marPct=B?margin/B*100:0;
-  R={px,D,oz,margin,loss,eq,ml,liqM,wipeM,M,B,S};
+  const eff=B?N/B:0;
+  R={px,D,oz,margin,loss,eq,ml,liqM,wipeM,M,B,S,N,lots,eff,L};
   const hit=eq<=S/100*margin;
   $("rLoss").setAttribute("stroke-dasharray",Math.min(100,lossPct)+" 100");
   $("rLoss").style.stroke=lossPct>=100?T.dn:lossPct>50?T.warn:T.gold;
@@ -208,7 +219,11 @@ function risk(force){
   else if(ml<150){s.textContent="Margin call zone";s.style.color="var(--gold)"}
   else{s.textContent="Position survives this move";s.style.color="var(--up)"}
   $("kBar").style.width=Math.min(100,lossPct)+"%";$("kBar").style.background=lossPct>=100?"var(--dn)":"";
-  $("kStats").innerHTML=st("Ounces controlled",f2(oz,2)+" oz")+st("Lots",f2(oz/100,3))+st("Margin used",usd(margin),"gold")+
+  $("kLossT").textContent=usd(-loss)+" ("+f2(lossPct,1)+"% of balance)";
+  $("kEffT").textContent=f2(eff,1)+"x used of "+f2(L,0)+"x allowed ("+f2(marPct,1)+"%)";
+  $("kEff").style.width=Math.min(100,marPct)+"%";$("kEff").style.background=marPct>=80?"var(--dn)":marPct>=40?"var(--warn)":"";
+  $("kStats").innerHTML=st("Position size",usd(N,0),"gold")+st("Lots",f2(lots,3)+" lot")+st("Ounces controlled",f2(oz,2)+" oz")+
+   st("Effective leverage",f2(eff,1)+"x","gold")+st("Margin used",usd(margin)+" ("+f2(marPct,1)+"%)")+st("Free margin at open",usd(B-margin))+
    st("Loss on move",usd(-loss),"hot")+st("Equity after",usd(eq),eq<0?"hot":"")+st("Margin level",f2(ml,0)+"%")+
    st("Loss per $1",usd(oz))+st("Move to stop-out",usd(liqM)+" /oz","hot")+st("Move to wipe-out",usd(wipeM)+" /oz");
   ladder();
@@ -294,7 +309,7 @@ function terrain(now){
 const sf=$("sf");
 function surface(now){
   const r=R;if(!r)return;const [x,w]=fit(sf,340),h=340;
-  const Nn=+$("kN").value||0,L=+$("kL").value||1,mx=Math.max(r.M*2,r.liqM*1.6,5),Nx=Math.max(Nn*2,1000),nx=80,nz=20,t=(now-t0)/1000;
+  const Nn=r.N||0,L=r.L||1,mx=Math.max(r.M*2,r.liqM*1.6,5),Nx=Math.max(Nn*2,1000),nx=80,nz=20,t=(now-t0)/1000;
   const yaw=-.22+Math.sin(t*.2)*.07,cy=Math.cos(yaw),sy=Math.sin(yaw),H=h*.5,base=h*.82,k=r.px>0?1/r.px:0;
   const hh=(u,v)=>Math.min(r.B?(v*Nx*k)*(u*mx)/r.B:0,1.3)*H*.72;
   const proj=(u,v,e)=>{const X=(u-.5)*w*.6,Z=(v-.5)*300,xr=X*cy+Z*sy,zr=-X*sy+Z*cy,p=700/(700+zr+150);return[w/2+xr*p,base-zr*.2*p-e*p,p]};
