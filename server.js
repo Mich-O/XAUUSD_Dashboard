@@ -11,29 +11,61 @@ try {
   }
 } catch {}
 
-// Single-admin login (HTTP Basic over Render's HTTPS). Fails closed if no password is configured.
+// Single-admin login with a signed session cookie. Fails closed if no password is configured.
 const ADMIN_USER = process.env.ADMIN_USER || "admin", ADMIN_PASS = process.env.ADMIN_PASS;
 if (!ADMIN_PASS) { console.error("ADMIN_PASS is not set. Copy .env.example to .env and set it, or add it in Render."); process.exit(1); }
+const SESSION_MS = 7 * 24 * 3600 * 1000, COOKIE = "gd_session";
 const hash = v => crypto.createHash("sha256").update(String(v)).digest();
 const same = (a, b) => crypto.timingSafeEqual(hash(a), hash(b));
+// Signing key: SESSION_SECRET if set, else derived from the admin password (changing it signs everyone out).
+const KEY = hash("gold-desk-session:" + (process.env.SESSION_SECRET || ADMIN_PASS));
+const sign = p => crypto.createHmac("sha256", KEY).update(p).digest("base64url");
+function readSession(req) {
+  const m = (req.headers.cookie || "").match(new RegExp("(?:^|;\\s*)" + COOKIE + "=([^;]+)"));
+  if (!m) return false;
+  const [p, sig] = m[1].split(".");
+  if (!p || !sig) return false;
+  const a = Buffer.from(sig), b = Buffer.from(sign(p));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  try { const d = JSON.parse(Buffer.from(p, "base64url").toString()); return d.u === ADMIN_USER && d.exp > Date.now(); }
+  catch { return false; }
+}
+const setCookie = (req, res, v, maxAge) => res.set("Set-Cookie",
+  `${COOKIE}=${v}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${req.secure ? "; Secure" : ""}`);
+const loginHtml = require("fs").readFileSync(path.join(__dirname, "login.html"), "utf8");
+const page = msg => loginHtml.replace("<!--MSG-->", msg ? `<p class="err" role="alert">${msg}</p>` : "");
 const fails = new Map(); // ip -> { n, until }
 app.set("trust proxy", 1);
-function auth(req, res, next) {
+app.use((_req, res, next) => { res.set({ "X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin" }); next(); });
+
+app.get("/login", (req, res) => {
+  if (readSession(req)) return res.redirect("/");
+  res.set("Cache-Control", "no-store").type("html").send(page(""));
+});
+app.post("/login", express.urlencoded({ extended: false, limit: "2kb" }), (req, res) => {
+  res.set("Cache-Control", "no-store");
   const f = fails.get(req.ip) || { n: 0, until: 0 };
   if (f.until > Date.now())
-    return res.status(429).set("Retry-After", String(Math.ceil((f.until - Date.now()) / 1000))).send("Too many attempts. Try again later.");
-  const m = (req.headers.authorization || "").match(/^Basic (.+)$/i);
-  if (m) {
-    const [u, ...rest] = Buffer.from(m[1], "base64").toString().split(":");
-    if (same(u, ADMIN_USER) & same(rest.join(":"), ADMIN_PASS)) { fails.delete(req.ip); return next(); }
-    if (fails.size > 1000) fails.clear();
-    f.n += 1;
-    if (f.n >= 5) { f.n = 0; f.until = Date.now() + 15 * 60 * 1000; }
-    fails.set(req.ip, f);
+    return res.status(429).type("html").send(page(`Too many attempts. Try again in ${Math.ceil((f.until - Date.now()) / 60000)} min.`));
+  const { username = "", password = "" } = req.body || {};
+  if (same(username, ADMIN_USER) & same(password, ADMIN_PASS)) {
+    fails.delete(req.ip);
+    const p = Buffer.from(JSON.stringify({ u: ADMIN_USER, exp: Date.now() + SESSION_MS })).toString("base64url");
+    setCookie(req, res, p + "." + sign(p), SESSION_MS / 1000);
+    return res.redirect(303, "/");
   }
-  res.set("WWW-Authenticate", 'Basic realm="Gold desk", charset="UTF-8"').status(401).send("Authentication required");
-}
-app.use(auth);
+  if (fails.size > 1000) fails.clear();
+  if (++f.n >= 5) { f.n = 0; f.until = Date.now() + 15 * 60 * 1000; }
+  fails.set(req.ip, f);
+  res.status(401).type("html").send(page("Wrong username or password."));
+});
+app.post("/logout", (req, res) => { setCookie(req, res, "", 0); res.redirect(303, "/login"); });
+// Everything below this line needs a valid session.
+app.use((req, res, next) => {
+  if (readSession(req)) return next();
+  if (req.path.startsWith("/api/")) return res.status(401).json({ error: "sign in required" });
+  res.redirect("/login");
+});
 const UA = { "User-Agent": "Mozilla/5.0 (gold-dashboard)" };
 const memo = {}, ticks = new Map();
 let cache = { t: 0, data: null };

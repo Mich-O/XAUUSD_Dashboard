@@ -57,7 +57,7 @@ section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
 </style><script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script></head><body><main>
 <header>
  <div><h1>Gold desk</h1><div class="sub">COMEX futures and XAUUSD spot, with a position and risk workbench</div></div>
- <div class="hud"><span id="conn"><i class="dot"></i><span id="connT">connecting</span></span><span id="clock"></span><button class="tgl" id="tg" type="button">Dark mode</button></div>
+ <div class="hud"><span id="conn"><i class="dot"></i><span id="connT">connecting</span></span><span id="clock"></span><button class="tgl" id="tg" type="button">Dark mode</button><form method="post" action="/logout" style="margin:0"><button class="tgl" type="submit">Sign out</button></form></div>
 </header>
 
 <div class="grid g3">
@@ -155,7 +155,7 @@ function spark(cv,s,col){
 }
 async function poll(){
   try{
-    const r=await fetch("/api/quotes",{cache:"no-store"});if(!r.ok)throw 0;const d=await r.json();
+    const r=await fetch("/api/quotes",{cache:"no-store"});if(r.status===401){location.href="/login";return}if(!r.ok)throw 0;const d=await r.json();
     Q=d;lastTs=d.ts;paint("spot",d.spot,"s");paint("fut",d.fut,"f");
     if(d.spot&&d.fut){const b=d.fut.price-d.spot.price;$("bas").textContent=(b>=0?"+":"")+f2(b);$("bas").className="px "+(b>=0?"up":"dn");
       $("basP").textContent=f2(b/d.spot.price*100,3)+"% of spot";$("basDot").setAttribute("cx",Math.max(14,Math.min(286,150+b*10)))}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · Gold desk</title>
+<script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4efe4;--panel:#fbf8f1;--line:#ddd5c3;--ink:#2a2620;--mute:#7d7564;--gold:#a8741a;--dn:#c2543a;--inp:#f0eadc;color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark;--bg:#1d1b17;--panel:#25221c;--line:#3b362b;--ink:#efe8d8;--mute:#9b927e;--gold:#e2b04a;--dn:#e27a5e;--inp:#1a1814}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:var(--bg);color:var(--ink);font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;
+background-image:linear-gradient(color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px);background-size:44px 44px}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--gold) 14%,transparent),transparent 60%)}
+main{position:relative;width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:30px 28px}
+main:before,main:after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--gold)}
+main:before{top:-1px;left:-1px;border-right:0;border-bottom:0}main:after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+h1{font:400 38px/1 "Instrument Serif",Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 22px;font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:8px;animation:p 1.8s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:14px}
+input{display:block;width:100%;margin-top:5px;background:var(--inp);border:1px solid var(--line);color:var(--ink);font:500 14px "IBM Plex Mono",monospace;padding:10px 12px;border-radius:4px}
+input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+button{width:100%;margin-top:6px;padding:11px;border:0;border-radius:4px;background:var(--ink);color:var(--bg);font:500 14px "IBM Plex Sans",sans-serif;cursor:pointer}
+button:hover{background:var(--gold);color:#fff}
+.err{color:var(--dn);font-size:13px;margin:0 0 14px;padding:8px 10px;border-left:2px solid var(--dn)}
+@media(prefers-reduced-motion:reduce){.dot{animation:none}}
+</style></head><body>
+<main>
+ <h1><i class="dot"></i>Gold desk</h1>
+ <p class="sub">Sign in to open the dashboard.</p>
+ <!--MSG-->
+ <form method="post" action="/login">
+  <label>Username<input name="username" type="text" autocomplete="username" autocapitalize="none" required autofocus></label>
+  <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+  <button type="submit">Sign in</button>
+ </form>
+</main></body></html>
