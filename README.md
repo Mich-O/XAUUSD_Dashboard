@@ -23,3 +23,5 @@ HttpOnly cookie that lasts 7 days; the Sign out button clears it.
 - Render: set `ADMIN_USER` and `ADMIN_PASS` under Environment. `SESSION_SECRET` is generated for you.
 - The server refuses to start without `ADMIN_PASS`. Five wrong attempts from one IP lock it out for 15 minutes.
 - Changing `ADMIN_PASS`, `ADMIN_USER` or `SESSION_SECRET` signs every session out.
+
+The webpage is live at https://gold-dashboard-snz9.onrender.com
