@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4efe4;--panel:#fbf8f1;--line:#ddd5c3;--ink:#2a2620;--mute:#7d7564;--gold:#a8741a;--up:#2f8f6b;--dn:#c2543a;--ice:#4f7f95;--warn:#c9782b;--inp:#f0eadc;--track:#e9e2d0;
+--serif:"Instrument Serif",Georgia,serif;--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box}html{color-scheme:light}:root[data-theme=dark]{color-scheme:dark;--bg:#1d1b17;--panel:#25221c;--line:#3b362b;--ink:#efe8d8;--mute:#9b927e;--gold:#e2b04a;--up:#74c3a0;--dn:#e27a5e;--ice:#8fb9cc;--warn:#e29a5e;--inp:var(--inp);--track:#2c281f}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);min-height:100vh;
+background-image:linear-gradient(color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px);background-size:44px 44px}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--gold) 14%,transparent),transparent 60%)}
+main{max-width:1280px;margin:0 auto;padding:20px 20px 60px;position:relative}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+h1{font:400 34px/1 var(--serif);margin:0;letter-spacing:.2px}
+.sub{color:var(--mute);font-size:13px}
+.hud{display:flex;gap:18px;align-items:center;font:12px var(--mono);color:var(--mute)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:6px}
+.live .dot{background:var(--up);animation:pulse 1.6s infinite}.err .dot{background:var(--dn)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(116,195,160,.6)}100%{box-shadow:0 0 0 9px transparent}}
+.grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1.1fr 1fr}.g2b{grid-template-columns:1.4fr 1fr}
+@media(max-width:960px){.g3,.g2,.g2b{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;position:relative}
+.card:before,.card:after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--gold);opacity:.8}
+.card:before{top:-1px;left:-1px;border-right:0;border-bottom:0}.card:after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+h2{font:400 22px/1.1 var(--serif);margin:0 0 2px}.cap{color:var(--mute);font-size:12.5px;margin:0 0 12px}
+.px{font:400 58px/1 var(--serif);letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin:6px 0 2px}
+.chg{font:500 13px var(--mono)}.up{color:var(--up)}.dn{color:var(--dn)}
+.flash-up{animation:fu .7s}.flash-dn{animation:fd .7s}
+@keyframes fu{from{color:var(--up);text-shadow:0 0 18px var(--up)}}@keyframes fd{from{color:var(--dn);text-shadow:0 0 18px var(--dn)}}
+.meta{display:flex;gap:16px;font:12px var(--mono);color:var(--mute);margin-top:8px;flex-wrap:wrap}.meta b{color:var(--ink);font-weight:500}
+canvas{display:block;width:100%}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+input,select{background:var(--inp);border:1px solid var(--line);color:var(--ink);font:500 14px var(--mono);padding:8px 10px;border-radius:4px;width:100%}
+input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+.st{border-left:2px solid var(--line);padding:2px 0 2px 10px}.st span{display:block;font-size:12px;color:var(--mute)}
+.st b{font:500 17px var(--mono)}.st.hot{border-color:var(--dn)}.st.gold{border-color:var(--gold)}
+.reactor{width:100%;max-width:420px;margin:0 auto;display:block}
+.spin{transform-origin:200px 200px;animation:spin 40s linear infinite}.spin2{transform-origin:200px 200px;animation:spin 7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.arc{transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1),stroke .4s}
+.status{font:500 13px var(--mono);text-align:center;margin-top:4px}
+.ladder{position:relative;height:300px;margin:8px 0 0 70px;border-left:2px solid var(--line)}
+.mk{position:absolute;left:-2px;width:100%;display:flex;align-items:center;transition:top .8s cubic-bezier(.2,.8,.2,1)}
+.mk i{width:14px;height:14px;border-radius:50%;margin-left:-8px;flex:none}.mk em{font:normal 12px var(--mono);margin-left:10px;white-space:nowrap}
+.mk u{position:absolute;right:100%;margin-right:14px;font:12px var(--mono);color:var(--mute);text-decoration:none;white-space:nowrap}
+.fall{position:absolute;left:-1px;width:3px;background:linear-gradient(var(--gold),var(--dn));transition:height .8s,top .8s}
+.mbar{height:8px;background:var(--inp);border-radius:4px;overflow:hidden;margin-top:12px}.mbar div{height:100%;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .6s,background .4s}
+section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
+
+.tgl{background:transparent;border:1px solid var(--line);color:var(--ink);padding:5px 14px;border-radius:999px;font:12px var(--mono);cursor:pointer}
+.tgl:hover{border-color:var(--gold)}.tgl:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style><script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script></head><body><main>
+<header>
+ <div><h1>Gold desk</h1><div class="sub">COMEX futures and XAUUSD spot, with a position and risk workbench</div></div>
+ <div class="hud"><span id="conn"><i class="dot"></i><span id="connT">connecting</span></span><span id="clock"></span><button class="tgl" id="tg" type="button">Dark mode</button></div>
+</header>
+
+<div class="grid g3">
+ <div class="card"><h2>XAUUSD spot</h2><p class="cap" id="sSrc">Dollars per troy ounce</p>
+  <div class="px" id="sPx">–</div><div class="chg" id="sChg">&nbsp;</div><canvas id="sSp" height="70"></canvas>
+  <div class="meta"><span>Day high <b id="sH">–</b></span><span>Day low <b id="sL">–</b></span><span>Tick <b id="sA">–</b></span></div></div>
+ <div class="card"><h2>COMEX gold futures</h2><p class="cap" id="fSrc">Front month, GC, dollars per ounce</p>
+  <div class="px" id="fPx">–</div><div class="chg" id="fChg">&nbsp;</div><canvas id="fSp" height="70"></canvas>
+  <div class="meta"><span>Day high <b id="fH">–</b></span><span>Day low <b id="fL">–</b></span><span>Tick <b id="fA">–</b></span></div></div>
+ <div class="card"><h2>Futures premium</h2><p class="cap">Futures minus spot. Carry and roll costs usually keep this positive.</p>
+  <div class="px" id="bas">–</div><div class="chg" id="basP">&nbsp;</div>
+  <svg viewBox="0 0 300 70" style="width:100%"><line x1="10" x2="290" y1="40" y2="40" stroke-width="2" style="stroke:var(--line)"/><line x1="150" x2="150" y1="28" y2="52" style="stroke:var(--mute)"/>
+  <circle id="basDot" cx="150" cy="40" r="8" style="fill:var(--gold);transition:cx .8s"/><text x="10" y="64" font-size="11" font-family="IBM Plex Mono" style="fill:var(--mute)">spot rich</text><text x="290" y="64" text-anchor="end" font-size="11" font-family="IBM Plex Mono" style="fill:var(--mute)">futures rich</text></svg>
+  <div class="meta"><span>Updated <b id="age">–</b></span><span>Refresh <b>2s</b></span></div></div>
+</div>
+
+<section class="card" style="margin-top:14px"><h2>Price terrain</h2><p class="cap">Left is earlier today and right is now. Height is the XAUUSD spot price, so the tallest point is the day’s high. The rows behind repeat the same line for depth.</p><canvas id="tr" height="300" aria-label="Dot landscape of today’s gold price"></canvas></section>
+<section class="grid g2">
+ <div class="card"><h2>Risk reactor</h2><p class="cap">The outer ring shows the loss as a share of your balance. The inner ring shows how much of it is tied up as margin.</p>
+  <svg class="reactor" viewBox="0 0 400 400" role="img" aria-label="Risk gauge">
+   <defs><linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-opacity="0" style="stop-color:var(--gold)"/><stop offset="1" stop-opacity=".35" style="stop-color:var(--gold)"/></linearGradient></defs>
+   <g class="spin"><circle cx="200" cy="200" r="186" fill="none" stroke-width="10" stroke-dasharray="2 9.1" style="stroke:var(--line)"/></g>
+   <g class="spin2"><path d="M200 200 L200 30 A170 170 0 0 1 340 105 Z" fill="url(#sw)"/><line x1="200" y1="200" x2="200" y2="30" stroke-width="1.5" style="stroke:var(--gold)"/></g>
+   <circle cx="200" cy="200" r="150" fill="none" stroke-width="16" style="stroke:var(--track)"/>
+   <circle id="rLoss" class="arc" cx="200" cy="200" r="150" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)" style="stroke:var(--dn)"/>
+   <circle cx="200" cy="200" r="122" fill="none" stroke-width="10" style="stroke:var(--track)"/>
+   <circle id="rMar" class="arc" cx="200" cy="200" r="122" fill="none" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)" style="stroke:var(--gold)"/>
+   <circle cx="200" cy="200" r="102" style="fill:var(--panel)"/>
+   <text id="rBig" x="200" y="216" text-anchor="middle" font-family="Instrument Serif" font-size="56" style="fill:var(--ink)">$0</text>
+   <text id="rSm" x="200" y="242" text-anchor="middle" font-size="13" font-family="IBM Plex Mono" style="fill:var(--mute)">at risk</text>
+   <text id="rPct" x="200" y="168" text-anchor="middle" font-size="15" font-family="IBM Plex Mono" style="fill:var(--ink)">0%</text>
+  </svg><div class="status" id="rStat">–</div></div>
+
+ <div class="card"><h2>Risk model</h2><p class="cap">Set a position and an adverse move to see what it costs. Priced off live XAUUSD spot.</p>
+  <div class="row">
+   <label>Position size (USD)<input id="kN" type="number" value="40000" min="0"></label>
+   <label>Leverage 1:<input id="kL" type="number" value="400" min="1"></label>
+   <label>Adverse move (USD per oz)<input id="kM" type="number" value="20" min="0" step="0.5"></label>
+   <label>Account balance (USD)<input id="kB" type="number" value="1000" min="0"></label>
+   <label>Direction<select id="kD"><option value="1">Long, price falls</option><option value="-1">Short, price rises</option></select></label>
+   <label>Stop-out level (%)<input id="kS" type="number" value="50" min="0"></label>
+  </div>
+  <div class="mbar" aria-hidden="true"><div id="kBar"></div></div>
+  <div class="stats" id="kStats"></div></div>
+</section>
+
+<section class="grid g2b">
+ <div class="card"><h2>Equity under stress</h2><p class="cap">Account equity as price moves against you. Where the line meets the dashed stop-out line, the broker closes you out.</p><canvas id="cv" height="300"></canvas></div>
+ <div class="card"><h2>Price ladder</h2><p class="cap">Entry at the top, the adverse move and the stop-out price below.</p><div class="ladder" id="lad"></div></div>
+</section>
+
+<section class="card" style="margin-top:14px"><h2>Risk surface</h2><p class="cap">Every dot is one combination of position size (depth) and adverse move (left to right). Height is the loss as a share of your balance. Red dots are combinations where your broker would stop you out. Your current setup is the gold marker.</p><canvas id="sf" height="340" aria-label="Loss surface across position size and adverse move"></canvas></section>
+<section class="card" style="margin-top:14px"><h2>Trade calculator</h2><p class="cap">Lot size, margin, floating P&amp;L and equity for one open position. Current price follows the live spot feed until you type over it.</p>
+ <div class="grid g2" style="gap:24px"><div class="row">
+  <label>Direction<select id="cD"><option value="1">Buy (long)</option><option value="-1">Sell (short)</option></select></label>
+  <label>Lots<input id="cLot" type="number" value="0.1" step="0.01" min="0"></label>
+  <label>Entry price<input id="cE" type="number" step="0.01"></label>
+  <label>Current price<input id="cP" type="number" step="0.01"></label>
+  <label>Balance (USD)<input id="cB" type="number" value="1000"></label>
+  <label>Leverage 1:<input id="cL" type="number" value="400"></label>
+  <label>Contract size (oz per lot)<input id="cS" type="number" value="100"></label>
+  <label>Stop-out level (%)<input id="cO" type="number" value="50"></label></div>
+  <div><div class="stats" id="cStats" style="margin-top:0"></div></div></div>
+ <div class="note">Standard XAUUSD contracts are 100 oz per lot, so a $1 move is $100 per lot. Check your broker, since contract size, stop-out level and margin rules vary.</div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const f2=(n,d=2)=>isFinite(n)?n.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
+const usd=(n,d=2)=>(n<0?"-$":"$")+f2(Math.abs(n),d);
+const T={},root=document.documentElement;
+function readT(){const c=getComputedStyle(root);["line","ink","mute","gold","up","dn","warn","panel"].forEach(k=>T[k]=c.getPropertyValue("--"+k).trim())}
+readT();
+let Q={spot:null,fut:null},last={s:0,f:0},lastTs=0,touched=false,cEntryTouched=false;
+
+/* ---------- live data ---------- */
+function paint(k,q,p){
+  if(!q||q.price==null)return;
+  const el=$(p+"Px");
+  if(last[p]&&q.price!==last[p]){el.classList.remove("flash-up","flash-dn");void el.offsetWidth;el.classList.add(q.price>last[p]?"flash-up":"flash-dn")}
+  last[p]=q.price;el.textContent=f2(q.price);
+  const d=q.prev?q.price-q.prev:null,c=$(p+"Chg");
+  if(d!=null){c.textContent=(d>=0?"+":"")+f2(d)+"  ("+(d>=0?"+":"")+f2(d/q.prev*100)+"%)";c.className="chg "+(d>=0?"up":"dn")}
+  $(p+"H").textContent=q.high?f2(q.high):"–";$(p+"L").textContent=q.low?f2(q.low):"–";
+  $(p+"Src").textContent=(k==="spot"?"Dollars per troy ounce":"Front month, GC, dollars per ounce")+", via "+q.src+(q.derived?" (chart and range backfilled from futures)":"");
+  spark($(p+"Sp"),q.series||[],d>=0?T.up:T.dn);
+}
+function spark(cv,s,col){
+  const r=Math.min(devicePixelRatio||1,1.5),w=cv.clientWidth,h=70;cv.width=w*r;cv.height=h*r;const x=cv.getContext("2d");x.scale(r,r);
+  if(s.length<2)return;const mn=Math.min(...s),mx=Math.max(...s),sp=(mx-mn)||1;
+  const pt=(v,i)=>[i/(s.length-1)*w,h-6-(v-mn)/sp*(h-14)];
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,col+"55");g.addColorStop(1,col+"00");
+  x.beginPath();s.forEach((v,i)=>x[i?"lineTo":"moveTo"](...pt(v,i)));x.strokeStyle=col;x.lineWidth=1.6;x.stroke();
+  x.lineTo(w,h);x.lineTo(0,h);x.fillStyle=g;x.fill();
+  const e=pt(s[s.length-1],s.length-1);x.beginPath();x.arc(e[0]-2,e[1],3.5,0,7);x.fillStyle=col;x.fill();
+}
+async function poll(){
+  try{
+    const r=await fetch("/api/quotes",{cache:"no-store"});if(!r.ok)throw 0;const d=await r.json();
+    Q=d;lastTs=d.ts;paint("spot",d.spot,"s");paint("fut",d.fut,"f");
+    if(d.spot&&d.fut){const b=d.fut.price-d.spot.price;$("bas").textContent=(b>=0?"+":"")+f2(b);$("bas").className="px "+(b>=0?"up":"dn");
+      $("basP").textContent=f2(b/d.spot.price*100,3)+"% of spot";$("basDot").setAttribute("cx",Math.max(14,Math.min(286,150+b*10)))}
+    $("conn").className="live";$("connT").textContent="live feed";
+    if(!touched&&d.spot)$("cP").value=d.spot.price.toFixed(2);
+    if(!cEntryTouched&&d.spot&&!$("cE").value)$("cE").value=d.spot.price.toFixed(2);
+    calc();risk();
+  }catch(e){$("conn").className="err";$("connT").textContent="feed lost, retrying"}
+}
+setInterval(poll,2000);poll();
+setInterval(()=>{$("clock").textContent=new Date().toUTCString().slice(17,25)+" UTC";if(lastTs)$("age").textContent=Math.round((Date.now()-lastTs)/1000)+"s ago";const ago=t=>{const n=Math.max(0,Math.round((Date.now()-t)/1000));return n<90?n+"s ago":Math.round(n/60)+"m ago"};if(Q.spot)$("sA").textContent=ago(Q.spot.t);if(Q.fut)$("fA").textContent=ago(Q.fut.t)},1000);
+
+/* ---------- trade calculator ---------- */
+const cs=["cD","cLot","cE","cP","cB","cL","cS","cO"];
+cs.forEach(i=>$(i).addEventListener("input",()=>{if(i==="cP")touched=true;if(i==="cE")cEntryTouched=true;calc()}));
+function st(l,v,c=""){return `<div class="st ${c}"><span>${l}</span><b>${v}</b></div>`}
+let ck="";
+function calc(){
+  const d=+$("cD").value,lot=+$("cLot").value,E=+$("cE").value,P=+$("cP").value,B=+$("cB").value,L=+$("cL").value||1,S=+$("cS").value,O=+$("cO").value;
+  if(!E||!P)return;const key=[d,lot,E,P,B,L,S,O].join();if(key===ck)return;ck=key;
+  const u=lot*S,notional=u*E,margin=notional/L,pnl=d*(P-E)*u,eq=B+pnl,free=eq-margin,ml=margin?eq/margin*100:0;
+  const liq=E+d*(O/100*margin-B)/u,perDollar=u;
+  $("cStats").innerHTML=
+   st("Position value",usd(notional))+st("Units",f2(u,1)+" oz")+st("Required margin",usd(margin),"gold")+
+   st("Floating P&L",usd(pnl),pnl<0?"hot":"")+st("Equity",usd(eq))+st("Free margin",usd(free),free<0?"hot":"")+
+   st("Margin level",isFinite(ml)?f2(ml,0)+"%":"–",ml<O?"hot":"")+st("Per $1 move",usd(perDollar))+st("Stop-out price",f2(liq),"hot")+
+   st("Lots for $ size","1 lot = "+usd(S*E,0));
+}
+
+/* ---------- risk model ---------- */
+const ks=["kN","kL","kM","kB","kD","kS"];ks.forEach(i=>$(i).addEventListener("input",risk));
+let R=null,t0=performance.now();
+let rk="";
+function risk(force){
+  const N=+$("kN").value,L=+$("kL").value||1,M=+$("kM").value,B=+$("kB").value,D=+$("kD").value,S=+$("kS").value;
+  const px=Q.spot?Q.spot.price:(R?R.px:4000); /* spot only */
+  const key=[N,L,M,B,D,S,px].join();if(key===rk&&!force)return;rk=key;
+  const oz=N/px,margin=N/L,loss=oz*M,eq=B-loss,ml=margin?eq/margin*100:0;
+  const liqM=oz?(B-S/100*margin)/oz:0,wipeM=oz?B/oz:0,lossPct=B?loss/B*100:0,marPct=B?margin/B*100:0;
+  R={px,D,oz,margin,loss,eq,ml,liqM,wipeM,M,B,S};
+  const hit=eq<=S/100*margin;
+  $("rLoss").setAttribute("stroke-dasharray",Math.min(100,lossPct)+" 100");
+  $("rLoss").style.stroke=lossPct>=100?T.dn:lossPct>50?T.warn:T.gold;
+  $("rMar").setAttribute("stroke-dasharray",Math.min(100,marPct)+" 100");
+  $("rBig").textContent="$"+f2(loss,loss<1000?2:0);$("rPct").textContent=f2(lossPct,1)+"% of balance";
+  $("rSm").textContent="on a $"+f2(M,2)+" move";
+  const s=$("rStat");
+  if(eq<=0){s.textContent="Account wiped out";s.style.color="var(--dn)"}
+  else if(hit){s.textContent="Stop-out triggered, broker closes the trade";s.style.color="var(--dn)"}
+  else if(ml<150){s.textContent="Margin call zone";s.style.color="var(--gold)"}
+  else{s.textContent="Position survives this move";s.style.color="var(--up)"}
+  $("kBar").style.width=Math.min(100,lossPct)+"%";$("kBar").style.background=lossPct>=100?"var(--dn)":"";
+  $("kStats").innerHTML=st("Ounces controlled",f2(oz,2)+" oz")+st("Lots",f2(oz/100,3))+st("Margin used",usd(margin),"gold")+
+   st("Loss on move",usd(-loss),"hot")+st("Equity after",usd(eq),eq<0?"hot":"")+st("Margin level",f2(ml,0)+"%")+
+   st("Loss per $1",usd(oz))+st("Move to stop-out",usd(liqM)+" /oz","hot")+st("Move to wipe-out",usd(wipeM)+" /oz");
+  ladder();
+}
+function ladder(){
+  const r=R,span=Math.max(r.M*1.5,r.liqM*1.25,2),pct=d=>Math.min(100,d/span*100);
+  const p=(d)=>f2(r.px-r.D*d);
+  const mk=(d,col,txt)=>`<div class="mk" style="top:${pct(d)}%"><u>${p(d)}</u><i style="background:${col};box-shadow:0 0 14px ${col}"></i><em style="color:${col}">${txt}</em></div>`;
+  $("lad").innerHTML=`<div class="fall" style="top:0;height:${pct(r.M)}%"></div>`+mk(0,T.ink,"Entry, live price")+
+   mk(r.M,T.gold,"After move, "+usd(-r.loss,0))+(r.liqM>0?mk(r.liqM,T.dn,"Stop-out at "+usd(r.liqM)+" move"):"");
+}
+
+/* ---------- stress curve ---------- */
+const cv=$("cv");
+function draw(now){
+  if(!R)return;
+  const [x,w]=fit(cv,300),h=300;
+  const r=R,xm=Math.max(r.M*1.5,r.liqM*1.25,2),yMax=Math.max(r.B*1.1,1),yMin=Math.min(-r.B*.25,r.eq*1.1,-1);
+  const pad={l:56,r:14,t:14,b:30},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const X=v=>pad.l+v/xm*W,Y=v=>pad.t+(yMax-v)/(yMax-yMin)*H;
+  x.font="11px IBM Plex Mono";x.textAlign="right";x.fillStyle=T.mute;x.strokeStyle=T.line;x.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=yMin+(yMax-yMin)*i/4,y=Y(v);x.beginPath();x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);x.stroke();x.fillText("$"+Math.round(v),pad.l-8,y+4)}
+  x.textAlign="center";for(let i=0;i<=5;i++){const v=xm*i/5;x.fillText("$"+f2(v,v<10?1:0),X(v),h-8)}
+  const eqAt=m=>r.B-r.oz*m;
+  x.beginPath();x.moveTo(X(0),Y(0));x.lineTo(w-pad.r,Y(0));x.strokeStyle=T.mute;x.stroke();
+  const so=r.S/100*r.margin;x.setLineDash([6,5]);x.strokeStyle=T.dn;x.beginPath();x.moveTo(pad.l,Y(so));x.lineTo(w-pad.r,Y(so));x.stroke();x.setLineDash([]);
+  x.fillStyle=T.dn;x.textAlign="left";x.fillText("stop-out",pad.l+6,Y(so)-6);
+  const g=x.createLinearGradient(0,Y(yMax),0,Y(yMin));g.addColorStop(0,T.gold+"47");g.addColorStop(1,T.dn+"0d");
+  x.beginPath();x.moveTo(X(0),Y(yMin));for(let i=0;i<=80;i++){const m=xm*i/80;x.lineTo(X(m),Y(eqAt(m)))}x.lineTo(X(xm),Y(yMin));x.fillStyle=g;x.fill();
+  x.beginPath();for(let i=0;i<=80;i++){const m=xm*i/80;x[i?"lineTo":"moveTo"](X(m),Y(eqAt(m)))}x.strokeStyle=T.gold;x.lineWidth=2.2;x.stroke();
+  const mx=X(r.M),my=Y(eqAt(r.M)),pu=(Math.sin((now-t0)/350)+1)/2;
+  x.setLineDash([3,4]);x.strokeStyle=T.ink;x.lineWidth=1;x.beginPath();x.moveTo(mx,pad.t);x.lineTo(mx,h-pad.b);x.stroke();x.setLineDash([]);
+  x.beginPath();x.arc(mx,my,7+pu*9,0,7);x.strokeStyle=T.dn+Math.round((.7-pu*.6)*255).toString(16).padStart(2,"0");x.lineWidth=2;x.stroke();
+  x.beginPath();x.arc(mx,my,5,0,7);x.fillStyle=T.ink;x.fill();
+  x.fillStyle=T.ink;x.textAlign=mx>w-120?"right":"left";x.fillText("$"+f2(eqAt(r.M),0)+" equity",mx+(mx>w-120?-12:12),my-12);
+}
+risk();requestAnimationFrame(loop);
+function setTheme(t){root.dataset.theme=t;try{localStorage.setItem("th",t)}catch(e){}readT();rk="";$("tg").textContent=t==="dark"?"Light mode":"Dark mode";
+ if(Q.spot||Q.fut){paint("spot",Q.spot,"s");paint("fut",Q.fut,"f")}risk(true)}
+$("tg").onclick=()=>setTheme(root.dataset.theme==="dark"?"light":"dark");setTheme(root.dataset.theme||"light");
+
+/* ---------- rendering: one throttled loop, only for canvases on screen ---------- */
+function fit(c,h){const rt=Math.min(devicePixelRatio||1,1.5),w=c.clientWidth,W=Math.round(w*rt),H=Math.round(h*rt);
+  if(c.width!==W||c.height!==H){c.width=W;c.height=H}
+  const x=c.getContext("2d");x.setTransform(W/w,0,0,H/h,0,0);x.clearRect(0,0,w,h);return[x,w]}
+const PX=new Float32Array(128),PY=new Float32Array(128),PK=new Float32Array(128),PP=new Float32Array(128),PO=new Uint8Array(128);
+const vis={tr:true,sf:true,cv:true};let lastF=0;
+const io=new IntersectionObserver(es=>es.forEach(e=>vis[e.target.id]=e.isIntersecting),{rootMargin:"120px"});
+["tr","sf","cv"].forEach(i=>io.observe($(i)));
+function loop(now){requestAnimationFrame(loop);if(document.hidden||now-lastF<33)return;lastF=now;
+  if(vis.tr)terrain(now);if(vis.sf)surface(now);if(vis.cv)draw(now)}
+
+/* ---------- price terrain: dotted ridge lines of the day's spot price ---------- */
+const tr=$("tr"),TN={nx:120,nz:20,q:null,n:new Float32Array(120),fall:new Float32Array(20)};
+for(let i=0;i<20;i++)TN.fall[i]=Math.exp(-Math.pow((i/19*2-1)*1.8,2));
+function terrain(now){
+  const q=Q.spot,s=(q&&(q.day||q.series))||[],[x,w]=fit(tr,300),h=300;
+  if(!s.length){x.fillStyle=T.mute;x.font="12px IBM Plex Mono";x.fillText("waiting for spot data",12,20);return}
+  const nx=TN.nx,nz=TN.nz,mn=q.low,mx=q.high;
+  if(TN.q!==q){TN.q=q;const sp=(mx-mn)||1;for(let i=0;i<nx;i++){const f=i/(nx-1)*(s.length-1),a=Math.floor(f),b=Math.min(a+1,s.length-1);TN.n[i]=Math.max(0,Math.min(1,((s[a]+(s[b]-s[a])*(f-a))-mn)/sp))}}
+  const mi=Math.round((nz-1)/2),t=(now-t0)/1000,yaw=Math.sin(t*.18)*.35,cy=Math.cos(yaw),sy=Math.sin(yaw),H=h*.5,base=h*.88;let tx=0,ty=0;
+  for(let iz=nz-1;iz>=0;iz--){
+    const Z=(iz/(nz-1)*2-1)*170,fall=TN.fall[iz];
+    for(let i=0;i<nx;i++){
+      const u=i/(nx-1),n=TN.n[i],rip=iz===mi?0:Math.sin(i*.25+t*1.7+iz*.6)*.025+Math.sin(i*.09-t*.9)*.02;
+      const hgt=(n*.9+.06+rip)*fall*H,X=(u-.5)*w*.9,xr=X*cy+Z*sy,zr=-X*sy+Z*cy,p=560/(560+zr+170);
+      PX[i]=w/2+xr*p;PY[i]=base-zr*.2*p-hgt*p;PK[i]=n*fall;PP[i]=p}
+    if(iz===mi){tx=PX[nx-1];ty=PY[nx-1]}
+    x.globalAlpha=1;x.beginPath();x.moveTo(PX[0],h+4);for(let i=0;i<nx;i++)x.lineTo(PX[i],PY[i]);x.lineTo(PX[nx-1],h+4);x.closePath();x.fillStyle=T.panel;x.fill();
+    x.globalAlpha=.5+.5*(1-iz/(nz-1));
+    for(let pass=0;pass<2;pass++){const k=pass?1.6:1.3;x.beginPath();
+      for(let i=0;i<nx;i++)if((PK[i]>.5)===(pass===1)){const d=k+PP[i]*k;x.rect(PX[i]-d/2,PY[i]-d/2,d,d)}
+      x.fillStyle=pass?T.gold:T.ink;x.fill()}
+  }
+  x.globalAlpha=1;x.font="11px IBM Plex Mono";x.fillStyle=T.mute;x.textAlign="left";
+  x.fillText("day high $"+f2(mx),12,20);x.fillText("day low $"+f2(mn),12,36);x.fillText("earlier today",12,h-10);
+  x.textAlign="right";x.fillText("now",w-12,h-10);x.fillStyle=T.ink;x.fillText("XAUUSD spot $"+f2(q.price),w-12,20);
+  const pu=(Math.sin(t*4)+1)/2;x.beginPath();x.arc(tx,ty,6+pu*8,0,7);x.strokeStyle=T.gold;x.globalAlpha=.8-pu*.6;x.lineWidth=2;x.stroke();
+  x.globalAlpha=1;x.beginPath();x.arc(tx,ty,4,0,7);x.fillStyle=T.gold;x.fill();
+}
+
+/* ---------- risk surface: position size x adverse move -> loss ---------- */
+const sf=$("sf");
+function surface(now){
+  const r=R;if(!r)return;const [x,w]=fit(sf,340),h=340;
+  const Nn=+$("kN").value||0,L=+$("kL").value||1,mx=Math.max(r.M*2,r.liqM*1.6,5),Nx=Math.max(Nn*2,1000),nx=80,nz=20,t=(now-t0)/1000;
+  const yaw=-.22+Math.sin(t*.2)*.07,cy=Math.cos(yaw),sy=Math.sin(yaw),H=h*.5,base=h*.82,k=r.px>0?1/r.px:0;
+  const hh=(u,v)=>Math.min(r.B?(v*Nx*k)*(u*mx)/r.B:0,1.3)*H*.72;
+  const proj=(u,v,e)=>{const X=(u-.5)*w*.6,Z=(v-.5)*300,xr=X*cy+Z*sy,zr=-X*sy+Z*cy,p=700/(700+zr+150);return[w/2+xr*p,base-zr*.2*p-e*p,p]};
+  for(let iz=nz-1;iz>=0;iz--){
+    const v=iz/(nz-1),Z=(v-.5)*300,mar=v*Nx/L,oz=v*Nx*k;
+    for(let i=0;i<nx;i++){
+      const u=i/(nx-1),loss=oz*u*mx,e=Math.min(r.B?loss/r.B:0,1.3)*H*.72,X=(u-.5)*w*.6,xr=X*cy+Z*sy,zr=-X*sy+Z*cy,p=700/(700+zr+150);
+      PX[i]=w/2+xr*p;PY[i]=base-zr*.2*p-e*p;PP[i]=p;PO[i]=(v>0&&(r.B-loss)<=r.S/100*mar)?1:0}
+    x.globalAlpha=1;x.beginPath();x.moveTo(PX[0],h+4);for(let i=0;i<nx;i++)x.lineTo(PX[i],PY[i]);x.lineTo(PX[nx-1],h+4);x.closePath();x.fillStyle=T.panel;x.fill();
+    x.globalAlpha=.55+.45*(1-v);
+    for(let pass=0;pass<2;pass++){x.beginPath();
+      for(let i=0;i<nx;i++)if(PO[i]===pass){const d=1.4+PP[i]*1.4;x.rect(PX[i]-d/2,PY[i]-d/2,d,d)}
+      x.fillStyle=pass?T.dn:T.ink;x.fill()}
+  }
+  x.globalAlpha=1;x.setLineDash([4,5]);x.strokeStyle=T.line;x.lineWidth=1;x.beginPath();
+  [[0,0],[1,0],[1,1],[0,1],[0,0]].forEach((c,i)=>{const q=proj(c[0],c[1],0);x[i?"lineTo":"moveTo"](q[0],q[1])});x.stroke();x.setLineDash([]);
+  x.font="11px IBM Plex Mono";x.fillStyle=T.mute;
+  let q=proj(.5,0,0);x.textAlign="center";x.fillText("adverse move, $0 to $"+f2(mx,0)+" per oz",q[0],q[1]+18);
+  q=proj(1,.5,0);x.textAlign="left";x.fillText("position size, $0 to $"+f2(Nx,0),q[0]+10,q[1]+4);
+  x.fillStyle=T.ink;x.fillRect(12,14,6,6);x.fillText("survives",24,21);x.fillStyle=T.dn;x.fillRect(12,32,6,6);x.fillText("stopped out",24,39);
+  const mu=r.M/mx,mv=Nn/Nx,mp=proj(mu,mv,hh(mu,mv)),pu=(Math.sin(t*4)+1)/2;
+  x.beginPath();x.arc(mp[0],mp[1],6+pu*9,0,7);x.strokeStyle=T.gold;x.globalAlpha=.85-pu*.6;x.lineWidth=2;x.stroke();x.globalAlpha=1;
+  x.beginPath();x.arc(mp[0],mp[1],4.5,0,7);x.fillStyle=T.gold;x.fill();
+  x.fillStyle=T.ink;x.textAlign="left";x.fillText("you are here",mp[0]+12,mp[1]-10);
+}
+</script></body></html>

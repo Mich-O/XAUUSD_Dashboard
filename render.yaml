@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gold-dashboard
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
