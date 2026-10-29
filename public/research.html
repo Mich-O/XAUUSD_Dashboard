@@ -1,50 +1,128 @@
 <!doctype html>
-<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<!-- ============================================================================
+     research.html : Research page ("Window study")
+     Served at /research by research.js. Styles live in research.css and the
+     behaviour in research-page.js, both in this folder.
+     ============================================================================ -->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gold desk · Research</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Same fonts as the Desk -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="research.css"></head><body>
-<header><h1>Gold desk · Research</h1><nav><a href="/">Desk</a><a class="on" href="/research">Research</a></nav><button id="th" aria-label="Toggle theme">Theme</button></header>
+<link rel="stylesheet" href="/research.css">
+
+<!-- Apply the saved theme before first paint (same "th" key as the Desk) so the page never flashes light -->
+<script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+
+<!-- ===== Top bar ===== -->
+<header>
+  <h1>Gold desk · Research</h1>
+  <nav><a href="/">Desk</a><a class="on" href="/research">Research</a></nav>
+  <button id="th" type="button" aria-label="Toggle theme">Theme</button>
+</header>
+
 <main>
-<section class="p">
-  <h2>Window study</h2>
-  <p class="sub">Pick a time window and a price distance. The study replays every past session and counts how often gold travelled that far from the price at the window's start.</p>
-  <div class="chips" id="inst"><button data-i="xau" class="on">XAUUSD spot</button><button data-i="gc">COMEX futures</button></div>
-  <div class="ctl">
-    <label>From<input id="f" type="time" step="300" value="02:00"></label>
-    <label>To<input id="t" type="time" step="300" value="03:00"></label>
-    <label>UTC offset (hours)<input id="tz" type="number" step="0.5" value="3"></label>
-    <label>Distance (USD)<input id="thr" type="number" step="1" min="0.5" value="20"></label>
-    <label>Lookback<select id="yr"><option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option><option value="4">4 years</option><option value="5" selected>5 years</option><option value="6">All stored</option></select></label>
-    <label>Counted when<select id="md"><option value="touch">Price touched it at any point</option><option value="close">Price ended there</option></select></label>
+
+  <!-- ===== 1. Question builder and headline answer ===== -->
+  <section class="p">
+    <h2>Window study</h2>
+    <p class="sub">Pick a time window and a price distance. The study replays every past session and counts how often gold travelled that far from the price at the window's start.</p>
+
+    <!-- Instrument switch -->
+    <div class="chips" id="inst">
+      <button data-i="xau" class="on">XAUUSD spot</button>
+      <button data-i="gc">COMEX futures</button>
+    </div>
+
+    <!-- Inputs. Window, offset, lookback and weekdays reload data; distance and mode recalculate instantly. -->
+    <div class="ctl">
+      <label>From<input id="f" type="time" step="300" value="02:00"></label>
+      <label>To<input id="t" type="time" step="300" value="03:00"></label>
+      <label>UTC offset (hours)<input id="tz" type="number" step="0.5" value="3"></label>
+      <label>Distance (USD)<input id="thr" type="number" step="1" min="0.5" value="20"></label>
+      <label>Lookback
+        <select id="yr">
+          <option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option>
+          <option value="4">4 years</option><option value="5" selected>5 years</option><option value="6">All stored</option>
+        </select>
+      </label>
+      <label>Counted when
+        <select id="md">
+          <option value="touch">Price touched it at any point</option>
+          <option value="close">Price ended there</option>
+        </select>
+      </label>
+    </div>
+    <div class="chips" id="dow"></div>   <!-- weekday chips are drawn by research-page.js -->
+
+    <div class="say" id="say">Loading…</div>   <!-- the headline sentence, or a message explaining what is missing -->
+    <div class="note" id="snap"></div>         <!-- skipped sessions and bar size -->
+    <div class="kpi" id="kpi"></div>           <!-- summary numbers -->
+  </section>
+
+  <!-- ===== 2. Every session as a dot ===== -->
+  <section class="p">
+    <h2>Every session</h2>
+    <p class="sub">One row per year, one dot per session, placed by day of year. Colour shows what happened inside the window.</p>
+    <canvas id="dm"></canvas>
+    <div class="leg">
+      <span><s class="legend-up"></s>reached +distance</span>
+      <span><s class="legend-down"></s>reached −distance</span>
+      <span><s class="legend-gold"></s>both</span>
+      <span><s class="legend-faint"></s>neither</span>
+    </div>
+  </section>
+
+  <!-- ===== 3. Odds curve and year / weekday breakdown ===== -->
+  <div class="two">
+    <section class="p">
+      <h2>How the distance changes the odds</h2>
+      <p class="sub">Horizontal: distance from the start price. Vertical: share of sessions that reached it. The marker is your distance.</p>
+      <canvas id="cv"></canvas>
+      <div class="leg">
+        <span><s class="legend-up"></s>up</span>
+        <span><s class="legend-down"></s>down</span>
+        <span><s class="legend-gold"></s>either direction</span>
+      </div>
+    </section>
+    <section class="p">
+      <h2>By year and weekday</h2>
+      <p class="sub">Share of sessions that reached the distance in either direction.</p>
+      <div id="by"></div>
+      <div class="weekday-summary" id="bw"></div>
+    </section>
   </div>
-  <div class="chips" id="dow"></div>
-  <div class="say" id="say">Loading…</div>
-  <div class="note" id="snap"></div>
-  <div class="kpi" id="kpi"></div>
-</section>
 
-<section class="p"><h2>Every session</h2><p class="sub">One row per year, one dot per session, placed by day of year. Colour shows what happened inside the window.</p>
-  <canvas id="dm"></canvas>
-  <div class="leg"><span><s class="legend-up"></s>reached +distance</span><span><s class="legend-down"></s>reached −distance</span><span><s class="legend-gold"></s>both</span><span><s class="legend-faint"></s>neither</span></div>
-</section>
+  <!-- ===== 4. Translation into your risk ===== -->
+  <section class="p">
+    <h2>Into your risk</h2>
+    <p class="sub">The move gold made inside this window in the worst 1, 5, 10 and 25 percent of sessions, priced with your size. Long positions are hurt by the down move, shorts by the up move.</p>
+    <div class="ctl risk-controls">
+      <label>Lots<input id="lots" type="number" step="0.01" value="1"></label>
+      <label>Contract (oz)<input id="cs" type="number" value="100"></label>
+      <label>Balance (USD)<input id="bal" type="number" value="40000"></label>
+    </div>
+    <table id="rk"></table>
+    <p class="note">The loss column is raw price movement times ounces, so it is exact only if your stop is not hit first. Compare it with the stop-out distance in the Desk's risk model.</p>
+  </section>
 
-<div class="two">
-<section class="p"><h2>How the distance changes the odds</h2><p class="sub">Horizontal: distance from the start price. Vertical: share of sessions that reached it. The marker is your distance.</p><canvas id="cv"></canvas>
-  <div class="leg"><span><s class="legend-up"></s>up</span><span><s class="legend-down"></s>down</span><span><s class="legend-gold"></s>either direction</span></div></section>
-<section class="p"><h2>By year and weekday</h2><p class="sub">Share of sessions that reached the distance in either direction.</p><div id="by"></div><div class="weekday-summary" id="bw"></div></section>
-</div>
+  <!-- ===== 5. Data status ===== -->
+  <section class="p">
+    <h2>Data</h2>
+    <div id="meta" class="note"></div>
+    <p class="note">Bars are stored with open, high, low and close. "Touched" uses the bar highs and lows, so inside a single bar the order of an up and a down move is unknown. Fixed UTC offsets ignore daylight saving.</p>
+    <button id="rf" type="button">Refresh latest bars</button>
+  </section>
 
-<section class="p"><h2>Into your risk</h2>
-  <p class="sub">The move gold made inside this window in the worst 1, 5, 10 and 25 percent of sessions, priced with your size. Long positions are hurt by the down move, shorts by the up move.</p>
-  <div class="ctl risk-controls"><label>Lots<input id="lots" type="number" step="0.01" value="1"></label><label>Contract (oz)<input id="cs" type="number" value="100"></label><label>Balance (USD)<input id="bal" type="number" value="40000"></label></div>
-  <table id="rk"></table>
-  <p class="note">The loss column is raw price movement times ounces, so it is exact only if your stop is not hit first. Compare it with the stop-out distance in the Desk's risk model.</p>
-</section>
-
-<section class="p"><h2>Data</h2><div id="meta" class="note"></div><p class="note">Bars are stored with open, high, low and close. "Touched" uses the bar highs and lows, so inside a single bar the order of an up and a down move is unknown. Fixed UTC offsets ignore daylight saving.</p>
-  <button id="rf">Refresh latest bars</button></section>
 </main>
+
 <script src="/research-page.js" defer></script>
-</body></html>
+</body>
+</html>
