@@ -3,6 +3,7 @@ const path = require("path");
 const crypto = require("crypto");
 const app = express();
 
+// Environment configuration and application-wide defaults.
 // Local dev only: read .env if present. On Render, set the variables in the dashboard instead.
 try {
   for (const l of require("fs").readFileSync(path.join(__dirname, ".env"), "utf8").split(/\r?\n/)) {
@@ -11,6 +12,7 @@ try {
   }
 } catch {}
 
+// Authentication helpers: password checks and signed session cookies.
 // Single-admin login with a signed session cookie. Fails closed if no password is configured.
 const ADMIN_USER = process.env.ADMIN_USER || "admin", ADMIN_PASS = process.env.ADMIN_PASS;
 if (!ADMIN_PASS) { console.error("ADMIN_PASS is not set. Copy .env.example to .env and set it, or add it in Render."); process.exit(1); }
@@ -35,6 +37,8 @@ const setCookie = (req, res, v, maxAge) => res.set("Set-Cookie",
 const loginHtml = require("fs").readFileSync(path.join(__dirname, "login.html"), "utf8");
 const page = msg => loginHtml.replace("<!--MSG-->", msg ? `<p class="err" role="alert">${msg}</p>` : "");
 const fails = new Map(); // ip -> { n, until }
+
+// Login, logout, and the session gate for protected routes.
 app.set("trust proxy", 1);
 app.use((_req, res, next) => { res.set({ "X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin" }); next(); });
 
@@ -70,6 +74,7 @@ const UA = { "User-Agent": "Mozilla/5.0 (gold-dashboard)" };
 const memo = {}, ticks = new Map();
 let cache = { t: 0, data: null };
 
+// Quote providers and source-level caching.
 // Per-source cache so fast sources can refresh every second without hammering slow ones.
 async function cached(key, ttl, fn) {
   const m = memo[key];
@@ -102,6 +107,8 @@ async function swissquote() {
   return { price: (p.bid + p.ask) / 2, t: q.ts || Date.now(), src: "Swissquote" };
 }
 const down = (a, n) => { const k = Math.ceil(a.length / n); return k > 1 ? a.filter((_, i) => i % k === 0 || i === a.length - 1) : a; };
+
+// Normalize provider data and build a spot history when no full spot history is available.
 // One shape for every quote. High and low come from the same data the terrain plots, so they always agree.
 function shape(q, full, price) {
   const v = [...full, price];
@@ -121,6 +128,7 @@ function buildSpot(best, fut) {
   return shape({ prev: fut && fut.prev != null ? fut.prev - basis : null, t: best.t, src: best.src, derived: true }, vals, best.price);
 }
 
+// Dashboard quote API and static page assets.
 app.get("/api/quotes", async (_req, res) => {
   if (cache.data && Date.now() - cache.t < 1000) return res.json(cache.data);
   const [fut, sq, ga, sy] = await Promise.allSettled([
@@ -138,6 +146,9 @@ app.get("/api/quotes", async (_req, res) => {
   cache = { t: Date.now(), data: out };
   res.json(out);
 });
+
+// Mount the research pages and APIs behind the same session gate as the dashboard.
+require("./research")(app);
 
 app.use(express.static(path.join(__dirname, "public")));
 app.listen(process.env.PORT || 3000, () => console.log("gold-dashboard up"));

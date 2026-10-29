@@ -4,95 +4,45 @@
 <title>Gold desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f4efe4;--panel:#fbf8f1;--line:#ddd5c3;--ink:#2a2620;--mute:#7d7564;--gold:#a8741a;--up:#2f8f6b;--dn:#c2543a;--ice:#4f7f95;--warn:#c9782b;--inp:#f0eadc;--track:#e9e2d0;
---serif:"Instrument Serif",Georgia,serif;--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
-*{box-sizing:border-box}html{color-scheme:light}:root[data-theme=dark]{color-scheme:dark;--bg:#1d1b17;--panel:#25221c;--line:#3b362b;--ink:#efe8d8;--mute:#9b927e;--gold:#e2b04a;--up:#74c3a0;--dn:#e27a5e;--ice:#8fb9cc;--warn:#e29a5e;--inp:var(--inp);--track:#2c281f}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);min-height:100vh;
-background-image:linear-gradient(color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--gold) 9%,transparent) 1px,transparent 1px);background-size:44px 44px}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--gold) 14%,transparent),transparent 60%)}
-main{max-width:1280px;margin:0 auto;padding:20px 20px 60px;position:relative}
-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-h1{font:400 34px/1 var(--serif);margin:0;letter-spacing:.2px}
-.sub{color:var(--mute);font-size:13px}
-.hud{display:flex;gap:18px;align-items:center;font:12px var(--mono);color:var(--mute)}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:6px}
-.live .dot{background:var(--up);animation:pulse 1.6s infinite}.err .dot{background:var(--dn)}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(116,195,160,.6)}100%{box-shadow:0 0 0 9px transparent}}
-.grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1.1fr 1fr}.g2b{grid-template-columns:1.4fr 1fr}
-@media(max-width:960px){.g3,.g2,.g2b{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;position:relative}
-.card:before,.card:after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--gold);opacity:.8}
-.card:before{top:-1px;left:-1px;border-right:0;border-bottom:0}.card:after{bottom:-1px;right:-1px;border-left:0;border-top:0}
-h2{font:400 22px/1.1 var(--serif);margin:0 0 2px}.cap{color:var(--mute);font-size:12.5px;margin:0 0 12px}
-.px{font:400 58px/1 var(--serif);letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin:6px 0 2px}
-.chg{font:500 13px var(--mono)}.up{color:var(--up)}.dn{color:var(--dn)}
-.flash-up{animation:fu .7s}.flash-dn{animation:fd .7s}
-@keyframes fu{from{color:var(--up);text-shadow:0 0 18px var(--up)}}@keyframes fd{from{color:var(--dn);text-shadow:0 0 18px var(--dn)}}
-.meta{display:flex;gap:16px;font:12px var(--mono);color:var(--mute);margin-top:8px;flex-wrap:wrap}.meta b{color:var(--ink);font-weight:500}
-canvas{display:block;width:100%}
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 12px}
-label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
-input,select{background:var(--inp);border:1px solid var(--line);color:var(--ink);font:500 14px var(--mono);padding:8px 10px;border-radius:4px;width:100%}
-input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
-.st{border-left:2px solid var(--line);padding:2px 0 2px 10px}.st span{display:block;font-size:12px;color:var(--mute)}
-.st b{font:500 17px var(--mono)}.st.hot{border-color:var(--dn)}.st.gold{border-color:var(--gold)}
-.reactor{width:100%;max-width:420px;margin:0 auto;display:block}
-.spin{transform-origin:200px 200px;animation:spin 40s linear infinite}.spin2{transform-origin:200px 200px;animation:spin 7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.arc{transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1),stroke .4s}
-.status{font:500 13px var(--mono);text-align:center;margin-top:4px}
-.ladder{position:relative;height:300px;margin:8px 0 0 70px;border-left:2px solid var(--line)}
-.mk{position:absolute;left:-2px;width:100%;display:flex;align-items:center;transition:top .8s cubic-bezier(.2,.8,.2,1)}
-.mk i{width:14px;height:14px;border-radius:50%;margin-left:-8px;flex:none}.mk em{font:normal 12px var(--mono);margin-left:10px;white-space:nowrap}
-.mk u{position:absolute;right:100%;margin-right:14px;font:12px var(--mono);color:var(--mute);text-decoration:none;white-space:nowrap}
-.fall{position:absolute;left:-1px;width:3px;background:linear-gradient(var(--gold),var(--dn));transition:height .8s,top .8s}
-.mbar{height:8px;background:var(--inp);border-radius:4px;overflow:hidden;margin-top:12px}.ml{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);margin-top:14px}.ml b{color:var(--ink);font:500 12px var(--mono)}.meter .mbar{margin-top:5px}
-.mbar div{height:100%;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .6s,background .4s}
-section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
-
-.tgl{background:transparent;border:1px solid var(--line);color:var(--ink);padding:5px 14px;border-radius:999px;font:12px var(--mono);cursor:pointer}
-.tgl:hover{border-color:var(--gold)}.tgl:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style><script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script></head><body><main>
+<link rel="stylesheet" href="styles.css">
+<script>try{var t=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script></head><body><main>
 <header>
- <div><h1>Gold desk</h1><div class="sub">COMEX futures and XAUUSD spot, with a position and risk workbench</div></div>
- <div class="hud"><span id="conn"><i class="dot"></i><span id="connT">connecting</span></span><span id="clock"></span><button class="tgl" id="tg" type="button">Dark mode</button><form method="post" action="/logout" style="margin:0"><button class="tgl" type="submit">Sign out</button></form></div>
+ <div><h1>Gold desk</h1><p class="sub">COMEX futures and XAUUSD spot, with a position and risk workbench</p></div>
+ <div class="hud"><span id="conn" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="connT">connecting</span></span><span id="clock"></span><a class="tgl research-link" href="/research">Market research</a><button class="tgl" id="tg" type="button">Dark mode</button><form class="logout-form" method="post" action="/logout"><button class="tgl" type="submit">Sign out</button></form></div>
 </header>
 
-<div class="grid g3">
- <div class="card"><h2>XAUUSD spot</h2><p class="cap" id="sSrc">Dollars per troy ounce</p>
+<section class="grid g3 market-overview" aria-label="Market overview">
+ <article class="card"><h2>XAUUSD spot</h2><p class="cap" id="sSrc">Dollars per troy ounce</p>
   <div class="px" id="sPx">–</div><div class="chg" id="sChg">&nbsp;</div><canvas id="sSp" height="70"></canvas>
-  <div class="meta"><span>Day high <b id="sH">–</b></span><span>Day low <b id="sL">–</b></span><span>Tick <b id="sA">–</b></span></div></div>
- <div class="card"><h2>COMEX gold futures</h2><p class="cap" id="fSrc">Front month, GC, dollars per ounce</p>
+  <div class="meta"><span>Day high <b id="sH">–</b></span><span>Day low <b id="sL">–</b></span><span>Tick <b id="sA">–</b></span></div></article>
+ <article class="card"><h2>COMEX gold futures</h2><p class="cap" id="fSrc">Front month, GC, dollars per ounce</p>
   <div class="px" id="fPx">–</div><div class="chg" id="fChg">&nbsp;</div><canvas id="fSp" height="70"></canvas>
-  <div class="meta"><span>Day high <b id="fH">–</b></span><span>Day low <b id="fL">–</b></span><span>Tick <b id="fA">–</b></span></div></div>
- <div class="card"><h2>Futures premium</h2><p class="cap">Futures minus spot. Carry and roll costs usually keep this positive.</p>
+  <div class="meta"><span>Day high <b id="fH">–</b></span><span>Day low <b id="fL">–</b></span><span>Tick <b id="fA">–</b></span></div></article>
+ <article class="card"><h2>Futures premium</h2><p class="cap">Futures minus spot. Carry and roll costs usually keep this positive.</p>
   <div class="px" id="bas">–</div><div class="chg" id="basP">&nbsp;</div>
-  <svg viewBox="0 0 300 70" style="width:100%"><line x1="10" x2="290" y1="40" y2="40" stroke-width="2" style="stroke:var(--line)"/><line x1="150" x2="150" y1="28" y2="52" style="stroke:var(--mute)"/>
-  <circle id="basDot" cx="150" cy="40" r="8" style="fill:var(--gold);transition:cx .8s"/><text x="10" y="64" font-size="11" font-family="IBM Plex Mono" style="fill:var(--mute)">spot rich</text><text x="290" y="64" text-anchor="end" font-size="11" font-family="IBM Plex Mono" style="fill:var(--mute)">futures rich</text></svg>
-  <div class="meta"><span>Updated <b id="age">–</b></span><span>Refresh <b>2s</b></span></div></div>
-</div>
+  <svg class="price-chart" viewBox="0 0 300 70"><line class="basis-line basis-line--zero" x1="10" x2="290" y1="40" y2="40"/><line class="basis-line basis-line--mid" x1="150" x2="150" y1="28" y2="52"/>
+  <circle class="basis-dot" id="basDot" cx="150" cy="40" r="8"/><text class="basis-label" x="10" y="64">spot rich</text><text class="basis-label" x="290" y="64" text-anchor="end">futures rich</text></svg>
+  <div class="meta"><span>Updated <b id="age">–</b></span><span>Refresh <b>2s</b></span></div></article>
+</section>
 
-<section class="card" style="margin-top:14px"><h2>Price terrain</h2><p class="cap">Left is earlier today and right is now. Height is the XAUUSD spot price, so the tallest point is the day’s high. The rows behind repeat the same line for depth.</p><canvas id="tr" height="300" aria-label="Dot landscape of today’s gold price"></canvas></section>
-<section class="grid g2">
- <div class="card"><h2>Risk reactor</h2><p class="cap">The outer ring shows the loss as a share of your balance. The inner ring shows how much of it is tied up as margin.</p>
+<section class="card" aria-labelledby="terrain-title"><h2 id="terrain-title">Price terrain</h2><p class="cap">Left is earlier today and right is now. Height is the XAUUSD spot price, so the tallest point is the day’s high. The rows behind repeat the same line for depth.</p><canvas id="tr" height="300" aria-label="Dot landscape of today’s gold price"></canvas></section>
+<section class="grid g2" aria-label="Risk controls">
+ <article class="card"><h2>Risk reactor</h2><p class="cap">The outer ring shows the loss as a share of your balance. The inner ring shows how much of it is tied up as margin.</p>
   <svg class="reactor" viewBox="0 0 400 400" role="img" aria-label="Risk gauge">
-   <defs><linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-opacity="0" style="stop-color:var(--gold)"/><stop offset="1" stop-opacity=".35" style="stop-color:var(--gold)"/></linearGradient></defs>
-   <g class="spin"><circle cx="200" cy="200" r="186" fill="none" stroke-width="10" stroke-dasharray="2 9.1" style="stroke:var(--line)"/></g>
-   <g class="spin2"><path d="M200 200 L200 30 A170 170 0 0 1 340 105 Z" fill="url(#sw)"/><line x1="200" y1="200" x2="200" y2="30" stroke-width="1.5" style="stroke:var(--gold)"/></g>
-   <circle cx="200" cy="200" r="150" fill="none" stroke-width="16" style="stroke:var(--track)"/>
-   <circle id="rLoss" class="arc" cx="200" cy="200" r="150" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)" style="stroke:var(--dn)"/>
-   <circle cx="200" cy="200" r="122" fill="none" stroke-width="10" style="stroke:var(--track)"/>
-   <circle id="rMar" class="arc" cx="200" cy="200" r="122" fill="none" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)" style="stroke:var(--gold)"/>
-   <circle cx="200" cy="200" r="102" style="fill:var(--panel)"/>
-   <text id="rBig" x="200" y="216" text-anchor="middle" font-family="Instrument Serif" font-size="56" style="fill:var(--ink)">$0</text>
-   <text id="rSm" x="200" y="242" text-anchor="middle" font-size="13" font-family="IBM Plex Mono" style="fill:var(--mute)">at risk</text>
-   <text id="rPct" x="200" y="168" text-anchor="middle" font-size="15" font-family="IBM Plex Mono" style="fill:var(--ink)">0%</text>
-  </svg><div class="status" id="rStat">–</div></div>
+   <defs><linearGradient id="sw" x1="0" x2="1"><stop class="gradient-start" offset="0" stop-opacity="0"/><stop class="gradient-end" offset="1" stop-opacity=".35"/></linearGradient></defs>
+   <g class="spin"><circle cx="200" cy="200" r="186" fill="none" stroke-width="10" stroke-dasharray="2 9.1" stroke="var(--line)"/></g>
+   <g class="spin2"><path d="M200 200 L200 30 A170 170 0 0 1 340 105 Z" fill="url(#sw)"/><line x1="200" y1="200" x2="200" y2="30" stroke-width="1.5" stroke="var(--gold)"/></g>
+   <circle class="gauge-track" cx="200" cy="200" r="150" fill="none" stroke-width="16"/>
+   <circle id="rLoss" class="arc gauge-loss" cx="200" cy="200" r="150" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)"/>
+   <circle class="gauge-track" cx="200" cy="200" r="122" fill="none" stroke-width="10"/>
+   <circle id="rMar" class="arc gauge-margin" cx="200" cy="200" r="122" fill="none" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 200 200)"/>
+   <circle class="gauge-center" cx="200" cy="200" r="102"/>
+   <text class="gauge-value" id="rBig" x="200" y="216" text-anchor="middle">$0</text>
+   <text class="gauge-label" id="rSm" x="200" y="242" text-anchor="middle">at risk</text>
+   <text class="gauge-percent" id="rPct" x="200" y="168" text-anchor="middle">0%</text>
+  </svg><div class="status" id="rStat">–</div></article>
 
- <div class="card"><h2>Risk model</h2><p class="cap">Size the trade in lots or in dollars and the other updates itself. While you size by lots, the dollar size follows the live XAUUSD spot price. Effective leverage is position size divided by your balance.</p>
+ <article class="card"><h2>Risk model</h2><p class="cap">Size the trade in lots or in dollars and the other updates itself. While you size by lots, the dollar size follows the live XAUUSD spot price. Effective leverage is position size divided by your balance.</p>
   <div class="row">
    <label>Lots<input id="kLot" type="number" value="1" min="0" step="0.01"></label>
    <label>Position size (USD)<input id="kN" type="number" value="400000" min="0"></label>
@@ -105,17 +55,17 @@ section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
   </div>
   <div class="meter"><div class="ml"><span>Effective leverage</span><b id="kEffT">–</b></div><div class="mbar" aria-hidden="true"><div id="kEff"></div></div></div>
   <div class="meter"><div class="ml"><span>Loss on this move</span><b id="kLossT">–</b></div><div class="mbar" aria-hidden="true"><div id="kBar"></div></div></div>
-  <div class="stats" id="kStats"></div></div>
+  <div class="stats" id="kStats"></div></article>
 </section>
 
-<section class="grid g2b">
- <div class="card"><h2>Equity under stress</h2><p class="cap">Account equity as price moves against you. Where the line meets the dashed stop-out line, the broker closes you out.</p><canvas id="cv" height="300"></canvas></div>
- <div class="card"><h2>Price ladder</h2><p class="cap">Entry at the top, the adverse move and the stop-out price below.</p><div class="ladder" id="lad"></div></div>
+<section class="grid g2b" aria-label="Stress scenarios">
+ <article class="card"><h2>Equity under stress</h2><p class="cap">Account equity as price moves against you. Where the line meets the dashed stop-out line, the broker closes you out.</p><canvas id="cv" height="300"></canvas></article>
+ <article class="card"><h2>Price ladder</h2><p class="cap">Entry at the top, the adverse move and the stop-out price below.</p><div class="ladder" id="lad"></div></article>
 </section>
 
-<section class="card" style="margin-top:14px"><h2>Risk surface</h2><p class="cap">Every dot is one combination of position size (depth) and adverse move (left to right). Height is the loss as a share of your balance. Red dots are combinations where your broker would stop you out. Your current setup is the gold marker.</p><canvas id="sf" height="340" aria-label="Loss surface across position size and adverse move"></canvas></section>
-<section class="card" style="margin-top:14px"><h2>Trade calculator</h2><p class="cap">Lot size, margin, floating P&amp;L and equity for one open position. Current price follows the live spot feed until you type over it.</p>
- <div class="grid g2" style="gap:24px"><div class="row">
+<section class="card" aria-labelledby="surface-title"><h2 id="surface-title">Risk surface</h2><p class="cap">Every dot is one combination of position size (depth) and adverse move (left to right). Height is the loss as a share of your balance. Red dots are combinations where your broker would stop you out. Your current setup is the gold marker.</p><canvas id="sf" height="340" aria-label="Loss surface across position size and adverse move"></canvas></section>
+<section class="card" aria-labelledby="calculator-title"><h2 id="calculator-title">Trade calculator</h2><p class="cap">Lot size, margin, floating P&amp;L and equity for one open position. Current price follows the live spot feed until you type over it.</p>
+ <div class="grid g2 trade-layout"><div class="row">
   <label>Direction<select id="cD"><option value="1">Buy (long)</option><option value="-1">Sell (short)</option></select></label>
   <label>Lots<input id="cLot" type="number" value="0.1" step="0.01" min="0"></label>
   <label>Entry price<input id="cE" type="number" step="0.01"></label>
@@ -124,7 +74,7 @@ section{margin-top:14px}.note{color:var(--mute);font-size:12px;margin-top:14px}
   <label>Leverage 1:<input id="cL" type="number" value="400"></label>
   <label>Contract size (oz per lot)<input id="cS" type="number" value="100"></label>
   <label>Stop-out level (%)<input id="cO" type="number" value="50"></label></div>
-  <div><div class="stats" id="cStats" style="margin-top:0"></div></div></div>
+  <div><div class="stats trade-stats" id="cStats"></div></div></div>
  <div class="note">Standard XAUUSD contracts are 100 oz per lot, so a $1 move is $100 per lot. Check your broker, since contract size, stop-out level and margin rules vary.</div></section>
 </main>
 <script>
